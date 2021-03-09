@@ -1,0 +1,44 @@
+---
+title: "Congressional Districts"
+author: "David Kane"
+date: "3/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(rstanarm)
+```
+
+```{r, read_in}
+x <- read_csv(file = "raw_data/results.csv", 
+         skip = 1,
+         col_types = cols(CD = col_character(),
+                          Incumbent = col_character(),
+                          Party = col_character(),
+                          Biden = col_double(),
+                          Trump = col_double(),
+                          Clinton = col_double(),
+                          Trump_1 = col_double(),
+                          Obama = col_double(),
+                          Romney = col_double(),
+                          X10 = col_logical(),
+                          X11 = col_character())) %>% 
+  select(CD, Trump, Biden) %>% 
+  mutate(biden_win = ifelse(Biden > Trump, 1, 0))
+
+small <- x %>% 
+  slice_sample(n = 50)
+```
+
+```{r model_fit}
+fit_1 <- stan_glm(formula = biden_win ~ 1, 
+                  data = small,
+                  family = binomial,
+                  refresh = 0,
+                  seed = 2021)
+```
+
+
+
