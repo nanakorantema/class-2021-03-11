@@ -11,7 +11,11 @@ library(tidyverse)
 library(rstanarm)
 ```
 
-```{r, read_in}
+```{r, read_in, warning = FALSE}
+# Could not figure out a way to remove the message about duplicate Trump column
+# names. There must be a way to do that! In the meantime, will just use
+# `warning = FALSE` to make it go away.
+
 x <- read_csv(file = "raw_data/results.csv", 
          skip = 1,
          col_types = cols(CD = col_character(),
@@ -27,18 +31,31 @@ x <- read_csv(file = "raw_data/results.csv",
                           X11 = col_character())) %>% 
   select(CD, Trump, Biden) %>% 
   mutate(biden_win = ifelse(Biden > Trump, 1, 0))
+```
+
+
+```{r}
+# Create sample so that we can understand how we might answer our questions if
+# we did not have all the data.
 
 small <- x %>% 
   slice_sample(n = 50)
 ```
 
+
+
 ```{r model_fit}
+# Fit the model.
+
 fit_1 <- stan_glm(formula = biden_win ~ 1, 
                   data = small,
                   family = binomial,
                   refresh = 0,
                   seed = 2021)
 ```
+
+There are two kinds of questions we can explore. First, what are "average" or "expected" values? Implicit here is the idea that we are considering so many units that the error terms does not matter. Use `posterior_epred()` for those questions. Second, what are "predicted" values for one or a small number of units. We can't ignore that randomness of life, as represented by error terms, when dealing with these questions. Use `posterior_predict()` in this scenario.
+
 
 
 
