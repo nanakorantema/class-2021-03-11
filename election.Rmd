@@ -52,10 +52,67 @@ fit_1 <- stan_glm(formula = biden_win ~ 1,
                   family = binomial,
                   refresh = 0,
                   seed = 2021)
+
+fit_1
 ```
 
 There are two kinds of questions we can explore. First, what are "average" or "expected" values? Implicit here is the idea that we are considering so many units that the error terms does not matter. Use `posterior_epred()` for those questions. Second, what are "predicted" values for one or a small number of units. We can't ignore that randomness of life, as represented by error terms, when dealing with these questions. Use `posterior_predict()` in this scenario.
 
+```{r}
+posterior_epred(fit_1,
+                newdata = tibble(constant = 1)) %>% 
+    as_tibble() %>% 
+    ggplot(aes(x = `1`)) +
+    geom_histogram(aes(y = after_stat(count/sum(count))),
+                   bins = 50) + 
+    labs(title = "Posterior Probability Distribution",
+         subtitle = "Proportion of districts biden won",
+         x = "Proportion p of biden votes in the election",
+         y = "Probability") + 
+  
+    scale_x_continuous(labels = scales::number_format()) +
+    scale_y_continuous(labels = scales::percent_format()) +
+    theme_classic()
+
+## this shows the probability that biden wins x % of districts
+```
+
+```{r}
+posterior_predict(fit_1, 
+                  newdata = tibble(constant = 1))
+```
 
 
+```{r}
+
+posterior_predict(fit_1, 
+                  newdata = tibble(constant = rep(1, 10)))
+```
+
+```{r}
+posterior_predict(fit_1, 
+                  newdata = tibble(constant = rep(1, 10)))  %>%
+    as_tibble()  %>% 
+  mutate(total = rowSums(across(`1`:`10`))) %>% 
+  select(total) %>% 
+  ggplot(aes(total)) +
+    geom_histogram(aes(y = after_stat(count/sum(count))),
+                   bins = 50) +
+  labs(title = "Posterior Probability Distribution",
+         subtitle = "Proportion of Biden wins in 10 districts",
+         x = "Number of Biden Wins",
+         y = "Probability") + 
+    scale_x_continuous(labels = scales::number_format(accuracy = 1)) +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    theme_classic()
+
+
+x <- posterior_predict(fit_1, 
+                  newdata = tibble(constant = rep(1, 10)))  %>%
+    as_tibble()
+
+
+# this shows the chance of Biden winning a particular number of districts from a sample of 10
+# full posterior 
+```
 
